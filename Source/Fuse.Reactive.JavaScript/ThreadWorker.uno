@@ -98,9 +98,13 @@ namespace Fuse.Reactive
 
 		void RunInner()
 		{
-			_ready.Set();
+			if defined(USE_REACTNATIVE)
+			{
+				// React native is async
+				_ready.Set();
+			}
 
-			if (_context == null)
+			try
 			{
 				if defined(USE_REACTNATIVE)
 				{
@@ -126,11 +130,25 @@ namespace Fuse.Reactive
 					CreateBuiltins();
 				}
 			}
+			catch(Exception e)
+			{
+				debug_log("Got exception during init: " + e);
+			}
+			finally
+			{
+				if defined(!USE_REACTNATIVE)
+				{
+					_ready.Set();
+				}
+			}
 
 			double t = Uno.Diagnostics.Clock.GetSeconds();
 
+			try
+			{
 			while (true)
 			{
+				debug_log("Tick...");
 				if (_terminate.WaitOne(0))
 					break;
 
@@ -194,6 +212,12 @@ namespace Fuse.Reactive
 					t = t2;
 				}
 			}
+			}catch(Exception e) {
+				debug_log("JSThread died: " + e);
+			}
+			finally {
+				debug_log("JSThread died without errors...");
+			}
 		}
 
 		void HandleException(string e)
@@ -234,7 +258,10 @@ namespace Fuse.Reactive
 			}
 			
 			if (prev != null)
+			{	
+				debug_log("Got exception: " + prev);
 				throw new WrapException(prev);
+			}
 		}
 
 		public void Invoke(Action action)

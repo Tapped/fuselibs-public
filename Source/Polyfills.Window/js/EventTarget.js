@@ -114,10 +114,10 @@ EventTarget = (function() {
 
 })();
 
-if (typeof window !== 'undefined') {
-    Window.prototype.addEventListener = EventTarget.prototype.addEventListener;
-    Window.prototype.removeEventListener = EventTarget.prototype.removeEventListener;
-    Window.prototype.dispatchEvent = EventTarget.prototype.dispatchEvent;
+/*if (window != null) {
+    window.prototype.addEventListener = EventTarget.prototype.addEventListener;
+    window.prototype.removeEventListener = EventTarget.prototype.removeEventListener;
+    window.prototype.dispatchEvent = EventTarget.prototype.dispatchEvent;
 
     window.EventTarget = EventTarget;
-}
+}*/

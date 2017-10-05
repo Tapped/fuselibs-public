@@ -112,18 +112,25 @@ namespace Fuse.Scripting.ReactNative
 			ReactContext ctx = (ReactContext)@{ReactNativeSetup:Of(_this)._reactContext:Get()};
 			final com.foreign.Uno.Action javaAction = action;
 			final com.foreign.Uno.Action_String exception = exceptionCallback;
-			ctx.runOnJSQueueThread(new java.lang.Runnable() {
-				@Override
-				public void run() {
-					try {
-						javaAction.run();
+			try
+			{
+				ctx.runOnJSQueueThread(new java.lang.Runnable() {
+					@Override
+					public void run() {
+						try {
+							javaAction.run();
+						}
+						catch(java.lang.Exception e) {
+							debug_log("Failed to do stuff on the queue: " + e.toString());
+							exception.run(e.toString());
+						}
 					}
-					catch(java.lang.Exception e) {
-						debug_log(e.toString());
-						exception.run(e.toString());
-					}
-				}
-			});
+				});
+			}
+			catch(java.lang.Exception e)
+			{
+				debug_log("Failed to run on JS queue thread: " + e);
+			}
 		@}
 
 		void OnReactContextInitialized(Java.Object reactContext) 

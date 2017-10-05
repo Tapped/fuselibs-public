@@ -25,11 +25,14 @@ namespace Fuse.Reactive
 	{
 		public static void Init(Context c)
 		{
-			 var console = c.NewObject();
-			 console["log"] = (Callback)Log;
-			 console["dir"] = (Callback)Dir;
-			 // TODO: console["error"] Uno.Diagnostics.Debug.Log( msg + " " + ex.ToString() + obj, Uno.Diagnostics.DebugMessageType.Error,	filePath, lineNumber );
-			 c.GlobalObject["awesomeConsole"] = console;
+			var console = c.NewObject();
+			console["log"] = (Callback)Log;
+			console["dir"] = (Callback)Dir;
+			// TODO: console["error"] Uno.Diagnostics.Debug.Log( msg + " " + ex.ToString() + obj, Uno.Diagnostics.DebugMessageType.Error,	filePath, lineNumber );
+			if defined(USE_REACTNATIVE)
+				c.GlobalObject["awesomeConsole"] = console;
+			else
+				c.GlobalObject["console"] = console;
 		}
 
 		static object Log(object[] args)

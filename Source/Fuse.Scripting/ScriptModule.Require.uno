@@ -64,19 +64,21 @@ namespace Fuse.Scripting
 
 			public object Require(string id)
 			{
-				if(GotReactNativeModules())
+				try
 				{
-					var m = TryGetReactNativeModule(id);
-					if(m != null)
+					if(GotReactNativeModules())
 					{
-						return m;
+						var m = TryGetReactNativeModule(id);
+						if(m != null)
+						{
+							return m;
+						}
 					}
-				}
 
-				bool isFile;
-				var path = _m.ComputePath(id, out isFile);
+					bool isFile;
+					var path = _m.ComputePath(id, out isFile);
 
-				ModuleResult module = _c.TryGetGlobalModuleResult(path);
+					ModuleResult module = _c.TryGetGlobalModuleResult(path);
 
 				if (module == null)
 				{
@@ -96,37 +98,43 @@ namespace Fuse.Scripting
 					if (mod == null)
 						throw new Error("require(): module not found: " + id);
 
-					module = mod.Evaluate(_c, path);
-					module.AddDependency(_dependant.Invalidate);
+						module = mod.Evaluate(_c, path);
+						module.AddDependency(_dependant.Invalidate);
 
-					if (module.Error == null)
-					{
-						if (_lastErrorPath == path)
+						if (module.Error == null)
 						{
-							Diagnostics.UserSuccess("JavaScript error in " + path + " was fixed!", this);
-							_lastErrorPath = null;
+							if (_lastErrorPath == path)
+							{
+								Diagnostics.UserSuccess("JavaScript error in " + path + " was fixed!", this);
+								_lastErrorPath = null;
+							}
+						}
+						else
+						{
+							var e = module.Error;
+
+							if (!e.Message.Contains(ModuleContainsAnErrorMessage))
+							{
+								Diagnostics.UserError("JavaScript error in " + path + " line " + e.LineNumber + ". " + e.ErrorMessage, this);
+								_lastErrorPath = path;
+							}
+							throw new Error(ModuleContainsAnErrorMessage + id);
 						}
 					}
 					else
 					{
-						var e = module.Error;
-
-						if (!e.Message.Contains(ModuleContainsAnErrorMessage))
-						{
-							Diagnostics.UserError("JavaScript error in " + path + " line " + e.LineNumber + ". " + e.ErrorMessage, this);
-							_lastErrorPath = path;
-						}
-						throw new Error(ModuleContainsAnErrorMessage + id);
+						module.AddDependency(_dependant.Invalidate);
 					}
+
+					
+
+					return module.Object["exports"];
 				}
-				else
+				catch(Exception e)
 				{
-					module.AddDependency(_dependant.Invalidate);
+					debug_log("Failed to require: " + e);
+					return null;			
 				}
-
-				
-
-				return module.Object["exports"];
 			}
 		}
 
